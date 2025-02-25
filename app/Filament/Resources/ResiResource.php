@@ -29,16 +29,7 @@ class ResiResource extends Resource
                 ->label('QR Code')
                 ->placeholder('Click to scan QR code...'),
 
-                Action::make('scanQR')
-                ->form([
-                    QrCodeInput::make('qrcode')
-                        ->label('Scan QR Code')
-                        ->required(),
-                ])
-                ->action(function (array $data) {
-                    // Process the scanned QR code
-                    // $data['qrcode'] contains the scanned value
-                }),
+                
             ]);
     }
 
@@ -76,4 +67,20 @@ class ResiResource extends Resource
             'edit' => Pages\EditResi::route('/{record}/edit'),
         ];
     }
+
+    public static function getActions(): array
+{
+    return [
+        Action::make('scanQR')
+            ->form([
+                QrCodeInput::make('qrcode')
+                    ->label('Scan QR Code')
+                    ->required(),
+            ])
+            ->action(function (array $data) {
+                // Process the scanned QR code
+                // $data['qrcode'] contains the scanned value
+            }),
+    ];
+}
 }
