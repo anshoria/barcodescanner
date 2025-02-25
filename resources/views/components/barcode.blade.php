@@ -24,13 +24,15 @@
     </audio>
 
     <script>
-        // Preload library segera ketika halaman dimuat
-        (function() {
+        // Pastikan hanya dimuat sekali
+        if (typeof window.barcodeScriptLoaded === 'undefined') {
+            window.barcodeScriptLoaded = true;
+            
+            // Load library saat page load
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-            script.async = false; // Penting: Hindari async untuk mempercepat loading
             document.head.appendChild(script);
-        })();
+        }
 
         // Fungsi untuk efek getar
         function vibrateDevice() {
@@ -77,11 +79,21 @@
             header.style.marginBottom = '15px';
             header.innerHTML = '<h3 style="font-size: 1.25rem; font-weight: 600;">Scan Barcode</h3>';
 
-            // Create scanner container with camera selection
+            // Create status indicator
+            const statusIndicator = document.createElement('div');
+            statusIndicator.id = 'scanner-status';
+            statusIndicator.style.marginBottom = '10px';
+            statusIndicator.style.color = '#4b5563';
+            statusIndicator.style.fontSize = '14px';
+            statusIndicator.innerText = 'Mempersiapkan kamera...';
+
+            // Create scanner container
             const scannerContainer = document.createElement('div');
             scannerContainer.id = 'reader';
             scannerContainer.style.width = '100%';
             scannerContainer.style.minHeight = '300px';
+            scannerContainer.style.backgroundColor = '#f3f4f6';
+            scannerContainer.style.position = 'relative';
 
             // Create footer
             const footer = document.createElement('div');
@@ -99,80 +111,122 @@
             cancelButton.style.border = 'none';
             cancelButton.style.cursor = 'pointer';
             cancelButton.onclick = function() {
-                modalContainer.remove();
                 if (modalContainer.html5QrCodeScanner) {
-                    modalContainer.html5QrCodeScanner.stop().catch(err => {});
+                    try {
+                        modalContainer.html5QrCodeScanner.stop();
+                    } catch(err) {
+                        console.log("Error stopping scanner:", err);
+                    }
                 }
+                modalContainer.remove();
             };
 
             // Append elements
             footer.appendChild(cancelButton);
             modalContent.appendChild(header);
+            modalContent.appendChild(statusIndicator);
             modalContent.appendChild(scannerContainer);
             modalContent.appendChild(footer);
             modalContainer.appendChild(modalContent);
             document.body.appendChild(modalContainer);
 
-            // Inisialisasi scanner segera
-            initScanner();
+            // Cek dan minta izin kamera terlebih dahulu
+            let statusElement = document.getElementById('scanner-status');
+            
+            checkCameraPermission()
+                .then(() => initializeScanner())
+                .catch(error => {
+                    statusElement.innerText = 'Error: ' + error.message;
+                    statusElement.style.color = 'red';
+                });
 
-            function initScanner() {
-                if (typeof Html5Qrcode !== 'undefined') {
-                    startScanner();
-                } else {
-                    // Coba lagi dalam waktu singkat
-                    setTimeout(initScanner, 50);
+            // Fungsi untuk memeriksa izin kamera
+            function checkCameraPermission() {
+                return new Promise((resolve, reject) => {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            // Stop stream setelah izin diperoleh
+                            stream.getTracks().forEach(track => track.stop());
+                            resolve();
+                        })
+                        .catch(err => {
+                            reject(new Error('Tidak dapat mengakses kamera. Pastikan memberikan izin kamera.'));
+                        });
+                });
+            }
+                
+            // Inisialisasi scanner
+            function initializeScanner() {
+                statusElement.innerText = 'Memuat library scanner...';
+                
+                // Cek apakah library sudah dimuat
+                function checkLibraryLoaded() {
+                    if (typeof Html5Qrcode !== 'undefined') {
+                        startScanner();
+                    } else {
+                        statusElement.innerText = 'Menunggu library scanner dimuat...';
+                        setTimeout(checkLibraryLoaded, 100);
+                    }
                 }
+                
+                checkLibraryLoaded();
             }
 
             function startScanner() {
-                const html5QrCodeScanner = new Html5Qrcode("reader");
+                statusElement.innerText = 'Menyiapkan kamera...';
                 
-                const config = {
-                    fps: 30, // Tingkatkan frame rate untuk scanning lebih cepat
-                    qrbox: { width: 250, height: 150 },
-                    formatsToSupport: [
-                        Html5QrcodeSupportedFormats.CODE_128, 
-                        Html5QrcodeSupportedFormats.EAN_13,
-                        Html5QrcodeSupportedFormats.EAN_8
-                    ],
-                    experimentalFeatures: {
-                        useBarCodeDetectorIfSupported: true // Gunakan API browser asli jika tersedia
-                    }
-                };
+                try {
+                    const html5QrCodeScanner = new Html5Qrcode("reader");
+                    
+                    const config = {
+                        fps: 15, // Turunkan sedikit untuk stabilitas
+                        qrbox: { width: 250, height: 150 },
+                        disableFlip: false
+                    };
 
-                const cameraConfig = {
-                    facingMode: "environment",
-                    aspectRatio: 1,
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                };
-
-                html5QrCodeScanner.start(
-                    cameraConfig,
-                    config,
-                    (decodedText) => {
-                        // Tambahkan efek suara dan getar
-                        playBeep();
-                        vibrateDevice();
-                        
-                        // Success callback - fill the resi field
-                        const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
-                        window.Livewire.find(wireId).set('data.resi', decodedText);
-                        
-                        // Close scanner
-                        html5QrCodeScanner.stop().catch(err => {});
-                        modalContainer.remove();
-                    },
-                    (errorMessage) => {
-                        // Error callback (silent)
-                    }
-                ).catch((err) => {
-                    console.error(`Error starting scanner: ${err}`);
-                });
-
-                // Store scanner reference
-                modalContainer.html5QrCodeScanner = html5QrCodeScanner;
+                    statusElement.innerText = 'Mengaktifkan kamera...';
+                    
+                    html5QrCodeScanner.start(
+                        { facingMode: "environment" },
+                        config,
+                        (decodedText) => {
+                            // Tambahkan efek suara dan getar
+                            playBeep();
+                            vibrateDevice();
+                            
+                            statusElement.innerText = 'Barcode terdeteksi: ' + decodedText;
+                            
+                            // Success callback - fill the resi field
+                            try {
+                                const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
+                                window.Livewire.find(wireId).set('data.resi', decodedText);
+                                
+                                // Close scanner after short delay
+                                setTimeout(() => {
+                                    html5QrCodeScanner.stop().catch(err => {});
+                                    modalContainer.remove();
+                                }, 500);
+                            } catch (error) {
+                                statusElement.innerText = 'Error mengisi field: ' + error.message;
+                                console.error('Error setting form value:', error);
+                            }
+                        },
+                        (errorMessage) => {
+                            // Silent error handling during scanning
+                        }
+                    ).then(() => {
+                        statusElement.innerText = 'Kamera aktif. Arahkan ke barcode.';
+                        modalContainer.html5QrCodeScanner = html5QrCodeScanner;
+                    }).catch((err) => {
+                        statusElement.innerText = 'Error: ' + err.message;
+                        statusElement.style.color = 'red';
+                        console.error(`Error starting scanner: ${err}`);
+                    });
+                } catch (error) {
+                    statusElement.innerText = 'Error memulai scanner: ' + error.message;
+                    statusElement.style.color = 'red';
+                    console.error('Error initializing scanner:', error);
+                }
             }
         }
     </script>
