@@ -18,15 +18,37 @@
         </button>
     </div>
 
+    <!-- Audio untuk efek suara -->
+    <audio id="barcode-beep" preload="auto">
+        <source src="https://cdn.jsdelivr.net/gh/niklasvh/html-to-image@v1.11.11/examples/assets/beep.mp3" type="audio/mp3">
+    </audio>
+
     <script>
-        // Load HTML5-QRCode library from CDN
-        if (typeof Html5Qrcode === 'undefined') {
+        // Preload library segera ketika halaman dimuat
+        (function() {
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+            script.async = false; // Penting: Hindari async untuk mempercepat loading
             document.head.appendChild(script);
+        })();
+
+        // Fungsi untuk efek getar
+        function vibrateDevice() {
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
         }
 
-        // Function to open barcode scanner
+        // Fungsi untuk efek suara
+        function playBeep() {
+            const audio = document.getElementById('barcode-beep');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Audio play failed:", e));
+            }
+        }
+
+        // Fungsi untuk membuka barcode scanner
         function openBarcodeScanner() {
             // Create modal container
             const modalContainer = document.createElement('div');
@@ -55,7 +77,7 @@
             header.style.marginBottom = '15px';
             header.innerHTML = '<h3 style="font-size: 1.25rem; font-weight: 600;">Scan Barcode</h3>';
 
-            // Create scanner container
+            // Create scanner container with camera selection
             const scannerContainer = document.createElement('div');
             scannerContainer.id = 'reader';
             scannerContainer.style.width = '100%';
@@ -78,8 +100,8 @@
             cancelButton.style.cursor = 'pointer';
             cancelButton.onclick = function() {
                 modalContainer.remove();
-                if (html5QrCodeScanner) {
-                    html5QrCodeScanner.clear();
+                if (modalContainer.html5QrCodeScanner) {
+                    modalContainer.html5QrCodeScanner.stop().catch(err => {});
                 }
             };
 
@@ -91,44 +113,67 @@
             modalContainer.appendChild(modalContent);
             document.body.appendChild(modalContainer);
 
-            // Initialize scanner when the library is loaded
-            const initScanner = function() {
+            // Inisialisasi scanner segera
+            initScanner();
+
+            function initScanner() {
                 if (typeof Html5Qrcode !== 'undefined') {
-                    const html5QrCodeScanner = new Html5Qrcode("reader");
-                    const config = {
-                        fps: 10,
-                        qrbox: { width: 250, height: 150 },
-                    };
-
-                    html5QrCodeScanner.start(
-                        { facingMode: "environment" },
-                        config,
-                        (decodedText) => {
-                            // Success callback - fill the resi field
-                            const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
-                            window.Livewire.find(wireId).set('data.resi', decodedText);
-                            
-                            // Close scanner
-                            html5QrCodeScanner.stop();
-                            modalContainer.remove();
-                        },
-                        (errorMessage) => {
-                            // Error callback (silent)
-                        }
-                    ).catch((err) => {
-                        console.error(`Error starting scanner: ${err}`);
-                    });
-
-                    // Store scanner reference
-                    modalContainer.html5QrCodeScanner = html5QrCodeScanner;
+                    startScanner();
                 } else {
-                    // Library not loaded yet, wait a bit
-                    setTimeout(initScanner, 500);
+                    // Coba lagi dalam waktu singkat
+                    setTimeout(initScanner, 50);
                 }
-            };
+            }
 
-            // Start scanner initialization
-            setTimeout(initScanner, 500);
+            function startScanner() {
+                const html5QrCodeScanner = new Html5Qrcode("reader");
+                
+                const config = {
+                    fps: 30, // Tingkatkan frame rate untuk scanning lebih cepat
+                    qrbox: { width: 250, height: 150 },
+                    formatsToSupport: [
+                        Html5QrcodeSupportedFormats.CODE_128, 
+                        Html5QrcodeSupportedFormats.EAN_13,
+                        Html5QrcodeSupportedFormats.EAN_8
+                    ],
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true // Gunakan API browser asli jika tersedia
+                    }
+                };
+
+                const cameraConfig = {
+                    facingMode: "environment",
+                    aspectRatio: 1,
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                };
+
+                html5QrCodeScanner.start(
+                    cameraConfig,
+                    config,
+                    (decodedText) => {
+                        // Tambahkan efek suara dan getar
+                        playBeep();
+                        vibrateDevice();
+                        
+                        // Success callback - fill the resi field
+                        const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
+                        window.Livewire.find(wireId).set('data.resi', decodedText);
+                        
+                        // Close scanner
+                        html5QrCodeScanner.stop().catch(err => {});
+                        modalContainer.remove();
+                    },
+                    (errorMessage) => {
+                        // Error callback (silent)
+                    }
+                ).catch((err) => {
+                    console.error(`Error starting scanner: ${err}`);
+                });
+
+                // Store scanner reference
+                modalContainer.html5QrCodeScanner = html5QrCodeScanner;
+            }
         }
     </script>
 </div>
