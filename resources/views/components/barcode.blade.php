@@ -1,18 +1,16 @@
 <div>
     <div class="flex items-center space-x-2">
-        <input 
-            type="text" 
-            wire:model="data.resi" 
-            class="block w-full transition duration-75 rounded-lg shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-inset focus:ring-primary-500 disabled:opacity-70 border-gray-300 dark:bg-gray-700 dark:text-white dark:focus:border-primary-500" 
-        />
-        <button 
-            type="button"
-            onclick="openBarcodeScanner()"
-            class="filament-button inline-flex items-center justify-center py-1 gap-1 font-medium rounded-lg border transition-colors focus:outline-none focus:ring-offset-2 focus:ring-2 focus:ring-inset min-h-[2.25rem] px-4 text-sm text-white shadow focus:ring-white border-transparent bg-primary-600 hover:bg-primary-500 focus:bg-primary-700 focus:ring-offset-primary-700"
-        >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        <input type="text" wire:model="data.resi"
+            class="block w-full transition duration-75 rounded-lg shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-inset focus:ring-primary-500 disabled:opacity-70 border-gray-300 dark:bg-gray-700 dark:text-white dark:focus:border-primary-500" />
+        <button type="button" onclick="openBarcodeScanner()"
+            class="filament-button inline-flex items-center justify-center py-1 gap-1 font-medium rounded-lg border transition-colors focus:outline-none focus:ring-offset-2 focus:ring-2 focus:ring-inset min-h-[2.25rem] px-4 text-sm text-white shadow focus:ring-white border-transparent bg-primary-600 hover:bg-primary-500 focus:bg-primary-700 focus:ring-offset-primary-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                </path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
             Scan
         </button>
@@ -20,20 +18,12 @@
 
     <!-- Audio untuk efek suara -->
     <audio id="barcode-beep" preload="auto">
-        <source src="https://cdn.jsdelivr.net/gh/niklasvh/html-to-image@v1.11.11/examples/assets/beep.mp3" type="audio/mp3">
+        <source
+        src="{{ asset('sound/barcode.mp3') }}"    
+        type="audio/mp3">
     </audio>
 
     <script>
-        // Pastikan hanya dimuat sekali
-        if (typeof window.barcodeScriptLoaded === 'undefined') {
-            window.barcodeScriptLoaded = true;
-            
-            // Load library saat page load
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-            document.head.appendChild(script);
-        }
-
         // Fungsi untuk efek getar
         function vibrateDevice() {
             if (navigator.vibrate) {
@@ -52,180 +42,213 @@
 
         // Fungsi untuk membuka barcode scanner
         function openBarcodeScanner() {
-            // Create modal container
-            const modalContainer = document.createElement('div');
-            modalContainer.id = 'barcode-scanner-modal';
-            modalContainer.style.position = 'fixed';
-            modalContainer.style.top = '0';
-            modalContainer.style.left = '0';
-            modalContainer.style.width = '100%';
-            modalContainer.style.height = '100%';
-            modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            modalContainer.style.display = 'flex';
-            modalContainer.style.alignItems = 'center';
-            modalContainer.style.justifyContent = 'center';
-            modalContainer.style.zIndex = '9999';
-
-            // Create modal content
-            const modalContent = document.createElement('div');
-            modalContent.style.backgroundColor = 'white';
-            modalContent.style.padding = '20px';
-            modalContent.style.borderRadius = '8px';
-            modalContent.style.width = '90%';
-            modalContent.style.maxWidth = '500px';
-
-            // Create header
-            const header = document.createElement('div');
-            header.style.marginBottom = '15px';
-            header.innerHTML = '<h3 style="font-size: 1.25rem; font-weight: 600;">Scan Barcode</h3>';
-
-            // Create status indicator
-            const statusIndicator = document.createElement('div');
-            statusIndicator.id = 'scanner-status';
-            statusIndicator.style.marginBottom = '10px';
-            statusIndicator.style.color = '#4b5563';
-            statusIndicator.style.fontSize = '14px';
-            statusIndicator.innerText = 'Mempersiapkan kamera...';
-
-            // Create scanner container
-            const scannerContainer = document.createElement('div');
-            scannerContainer.id = 'reader';
-            scannerContainer.style.width = '100%';
-            scannerContainer.style.minHeight = '300px';
-            scannerContainer.style.backgroundColor = '#f3f4f6';
-            scannerContainer.style.position = 'relative';
-
-            // Create footer
-            const footer = document.createElement('div');
-            footer.style.marginTop = '15px';
-            footer.style.display = 'flex';
-            footer.style.justifyContent = 'flex-end';
-
-            // Create cancel button
-            const cancelButton = document.createElement('button');
-            cancelButton.innerText = 'Cancel';
-            cancelButton.style.padding = '8px 16px';
-            cancelButton.style.backgroundColor = '#f3f4f6';
-            cancelButton.style.color = '#374151';
-            cancelButton.style.borderRadius = '6px';
-            cancelButton.style.border = 'none';
-            cancelButton.style.cursor = 'pointer';
-            cancelButton.onclick = function() {
-                if (modalContainer.html5QrCodeScanner) {
-                    try {
-                        modalContainer.html5QrCodeScanner.stop();
-                    } catch(err) {
-                        console.log("Error stopping scanner:", err);
-                    }
-                }
-                modalContainer.remove();
-            };
-
-            // Append elements
-            footer.appendChild(cancelButton);
-            modalContent.appendChild(header);
-            modalContent.appendChild(statusIndicator);
-            modalContent.appendChild(scannerContainer);
-            modalContent.appendChild(footer);
-            modalContainer.appendChild(modalContent);
-            document.body.appendChild(modalContainer);
-
-            // Cek dan minta izin kamera terlebih dahulu
-            let statusElement = document.getElementById('scanner-status');
-            
-            checkCameraPermission()
-                .then(() => initializeScanner())
-                .catch(error => {
-                    statusElement.innerText = 'Error: ' + error.message;
-                    statusElement.style.color = 'red';
-                });
-
-            // Fungsi untuk memeriksa izin kamera
-            function checkCameraPermission() {
-                return new Promise((resolve, reject) => {
-                    navigator.mediaDevices.getUserMedia({ video: true })
-                        .then(stream => {
-                            // Stop stream setelah izin diperoleh
-                            stream.getTracks().forEach(track => track.stop());
-                            resolve();
-                        })
-                        .catch(err => {
-                            reject(new Error('Tidak dapat mengakses kamera. Pastikan memberikan izin kamera.'));
-                        });
-                });
-            }
-                
-            // Inisialisasi scanner
-            function initializeScanner() {
-                statusElement.innerText = 'Memuat library scanner...';
-                
-                // Cek apakah library sudah dimuat
-                function checkLibraryLoaded() {
-                    if (typeof Html5Qrcode !== 'undefined') {
-                        startScanner();
-                    } else {
-                        statusElement.innerText = 'Menunggu library scanner dimuat...';
-                        setTimeout(checkLibraryLoaded, 100);
-                    }
-                }
-                
-                checkLibraryLoaded();
+            // Load library jika belum
+            if (typeof Html5Qrcode === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                script.onload = initScannerModal;
+                document.head.appendChild(script);
+            } else {
+                initScannerModal();
             }
 
-            function startScanner() {
-                statusElement.innerText = 'Menyiapkan kamera...';
-                
-                try {
-                    const html5QrCodeScanner = new Html5Qrcode("reader");
-                    
-                    const config = {
-                        fps: 15, // Turunkan sedikit untuk stabilitas
-                        qrbox: { width: 250, height: 150 },
-                        disableFlip: false
-                    };
+            function initScannerModal() {
+                // Create modal container
+                const modalContainer = document.createElement('div');
+                modalContainer.id = 'barcode-scanner-modal';
+                modalContainer.style.position = 'fixed';
+                modalContainer.style.top = '0';
+                modalContainer.style.left = '0';
+                modalContainer.style.width = '100%';
+                modalContainer.style.height = '100%';
+                modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                modalContainer.style.display = 'flex';
+                modalContainer.style.alignItems = 'center';
+                modalContainer.style.justifyContent = 'center';
+                modalContainer.style.zIndex = '9999';
 
-                    statusElement.innerText = 'Mengaktifkan kamera...';
-                    
-                    html5QrCodeScanner.start(
-                        { facingMode: "environment" },
-                        config,
-                        (decodedText) => {
-                            // Tambahkan efek suara dan getar
-                            playBeep();
-                            vibrateDevice();
-                            
-                            statusElement.innerText = 'Barcode terdeteksi: ' + decodedText;
-                            
-                            // Success callback - fill the resi field
-                            try {
-                                const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
-                                window.Livewire.find(wireId).set('data.resi', decodedText);
-                                
-                                // Close scanner after short delay
-                                setTimeout(() => {
-                                    html5QrCodeScanner.stop().catch(err => {});
-                                    modalContainer.remove();
-                                }, 500);
-                            } catch (error) {
-                                statusElement.innerText = 'Error mengisi field: ' + error.message;
-                                console.error('Error setting form value:', error);
-                            }
-                        },
-                        (errorMessage) => {
-                            // Silent error handling during scanning
+                // Create modal content
+                const modalContent = document.createElement('div');
+                modalContent.style.backgroundColor = 'white';
+                modalContent.style.padding = '20px';
+                modalContent.style.borderRadius = '8px';
+                modalContent.style.width = '90%';
+                modalContent.style.maxWidth = '500px';
+
+                // Create header
+                const header = document.createElement('div');
+                header.style.marginBottom = '15px';
+                header.innerHTML = '<h3 style="font-size: 1.25rem; font-weight: 600;">Scan Barcode</h3>';
+
+                // Create status indicator
+                const statusIndicator = document.createElement('div');
+                statusIndicator.id = 'scanner-status';
+                statusIndicator.style.marginBottom = '10px';
+                statusIndicator.style.color = '#4b5563';
+                statusIndicator.style.fontSize = '14px';
+                statusIndicator.innerText = 'Mempersiapkan kamera...';
+
+                // Create scanner container
+                const scannerContainer = document.createElement('div');
+                scannerContainer.id = 'reader';
+                scannerContainer.style.width = '100%';
+                scannerContainer.style.minHeight = '300px';
+                scannerContainer.style.border = '1px solid #e5e7eb';
+                scannerContainer.style.overflow = 'hidden';
+                scannerContainer.style.borderRadius = '4px';
+
+                // Create guidance overlay
+                const guidanceOverlay = document.createElement('div');
+                guidanceOverlay.style.position = 'relative';
+                guidanceOverlay.style.top = '-300px';
+                guidanceOverlay.style.left = '50%';
+                guidanceOverlay.style.transform = 'translateX(-50%)';
+                guidanceOverlay.style.width = '280px';
+                guidanceOverlay.style.height = '180px';
+                guidanceOverlay.style.border = '2px solid #ef4444';
+                guidanceOverlay.style.borderRadius = '8px';
+                guidanceOverlay.style.boxShadow = '0 0 0 2000px rgba(0, 0, 0, 0.3)';
+                guidanceOverlay.style.zIndex = '1';
+                guidanceOverlay.style.pointerEvents = 'none';
+
+                // Create footer
+                const footer = document.createElement('div');
+                footer.style.marginTop = '15px';
+                footer.style.display = 'flex';
+                footer.style.justifyContent = 'space-between';
+                footer.style.alignItems = 'center';
+
+                // Create camera flip button
+                const flipButton = document.createElement('button');
+                flipButton.innerText = 'Flip Camera';
+                flipButton.style.padding = '8px 16px';
+                flipButton.style.backgroundColor = '#3b82f6';
+                flipButton.style.color = 'white';
+                flipButton.style.borderRadius = '6px';
+                flipButton.style.border = 'none';
+                flipButton.style.cursor = 'pointer';
+                flipButton.onclick = function() {
+                    const currentFacingMode = currentCamera === 'environment' ? 'user' : 'environment';
+                    restartCamera(currentFacingMode);
+                };
+
+                // Create cancel button
+                const cancelButton = document.createElement('button');
+                cancelButton.innerText = 'Cancel';
+                cancelButton.style.padding = '8px 16px';
+                cancelButton.style.backgroundColor = '#f3f4f6';
+                cancelButton.style.color = '#374151';
+                cancelButton.style.borderRadius = '6px';
+                cancelButton.style.border = 'none';
+                cancelButton.style.cursor = 'pointer';
+                cancelButton.onclick = function() {
+                    if (html5QrCode) {
+                        try {
+                            html5QrCode.stop();
+                        } catch (err) {
+                            console.log("Error stopping scanner:", err);
                         }
-                    ).then(() => {
-                        statusElement.innerText = 'Kamera aktif. Arahkan ke barcode.';
-                        modalContainer.html5QrCodeScanner = html5QrCodeScanner;
-                    }).catch((err) => {
-                        statusElement.innerText = 'Error: ' + err.message;
-                        statusElement.style.color = 'red';
-                        console.error(`Error starting scanner: ${err}`);
-                    });
-                } catch (error) {
-                    statusElement.innerText = 'Error memulai scanner: ' + error.message;
-                    statusElement.style.color = 'red';
-                    console.error('Error initializing scanner:', error);
+                    }
+                    modalContainer.remove();
+                };
+
+                // Append elements
+                footer.appendChild(flipButton);
+                footer.appendChild(cancelButton);
+                modalContent.appendChild(header);
+                modalContent.appendChild(statusIndicator);
+                modalContent.appendChild(scannerContainer);
+                scannerContainer.appendChild(guidanceOverlay);
+                modalContent.appendChild(footer);
+                modalContainer.appendChild(modalContent);
+                document.body.appendChild(modalContainer);
+
+                // Start scanner
+                let html5QrCode;
+                let currentCamera = 'environment';
+
+                startScanner(currentCamera);
+
+                function startScanner(facingMode) {
+                    currentCamera = facingMode;
+                    const statusElement = document.getElementById('scanner-status');
+
+                    try {
+                        html5QrCode = new Html5Qrcode("reader");
+
+                        const config = {
+                            fps: 20,
+                            qrbox: {
+                                width: 280,
+                                height: 180
+                            },
+                            formatsToSupport: [
+                                Html5QrcodeSupportedFormats.CODE_128,
+                                Html5QrcodeSupportedFormats.EAN_13,
+                                Html5QrcodeSupportedFormats.EAN_8,
+                                Html5QrcodeSupportedFormats.CODE_39,
+                                Html5QrcodeSupportedFormats.CODE_93,
+                                Html5QrcodeSupportedFormats.UPC_A,
+                                Html5QrcodeSupportedFormats.UPC_E
+                            ],
+                            experimentalFeatures: {
+                                useBarCodeDetectorIfSupported: true
+                            },
+                            aspectRatio: 1.0
+                        };
+
+                        html5QrCode.start({
+                                facingMode: facingMode
+                            },
+                            config,
+                            (decodedText) => {
+                                // Efek suara dan getar saat berhasil
+                                playBeep();
+                                vibrateDevice();
+
+                                statusElement.innerText = 'Barcode terdeteksi!';
+                                statusElement.style.color = '#10b981';
+                                statusElement.style.fontWeight = 'bold';
+
+                                // Set nilai ke input resi
+                                try {
+                                    const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
+                                    window.Livewire.find(wireId).set('data.resi', decodedText);
+
+                                    // Tutup modal setelah delay singkat
+                                    setTimeout(() => {
+                                        if (html5QrCode) {
+                                            html5QrCode.stop().catch(() => {});
+                                        }
+                                        modalContainer.remove();
+                                    }, 1000);
+                                } catch (error) {
+                                    console.error('Error setting form value:', error);
+                                }
+                            },
+                            (errorMessage) => {
+                                // Silent error handling
+                            }
+                        ).then(() => {
+                            statusElement.innerText = 'Arahkan kamera ke barcode';
+                        }).catch((err) => {
+                            statusElement.innerText = 'Error: ' + err.message;
+                            console.error('Error starting scanner:', err);
+                        });
+                    } catch (error) {
+                        console.error('Error initializing scanner:', error);
+                    }
+                }
+
+                function restartCamera(facingMode) {
+                    if (html5QrCode) {
+                        html5QrCode.stop().then(() => {
+                            startScanner(facingMode);
+                        }).catch((err) => {
+                            console.error('Error stopping scanner:', err);
+                            startScanner(facingMode);
+                        });
+                    }
                 }
             }
         }
