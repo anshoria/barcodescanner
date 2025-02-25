@@ -18,7 +18,7 @@
 
     <!-- Audio untuk efek suara -->
     <audio id="barcode-beep" preload="auto">
-        <source src="sound/barcode.mp3'" type="audio/mp3">
+        <source src="{{ asset('sound/barcode.mp3') }}" type="audio/mp3">
         <!-- Fallback menggunakan data URI jika file tidak ditemukan -->
         <source
             src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAA..."
