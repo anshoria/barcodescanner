@@ -16,6 +16,9 @@
         </button>
     </div>
 
+    <!-- Hidden audio element to ensure we have only one root element -->
+    <audio id="barcode-beep" preload="auto" style="display:none;"></audio>
+
     <script>
         // Preload library saat dokumen dibuka
         document.addEventListener('DOMContentLoaded', function() {
@@ -25,42 +28,33 @@
                 document.head.appendChild(script);
             }
             
-            // Preload suara
-            ensureBeepSound();
+            // Setup audio element dengan data URI
+            const beepElement = document.getElementById('barcode-beep');
+            beepElement.src = 'data:audio/mp3;base64,SUQzAwAAAAACHVRJVDIAAAAZAAAARWZmZWN0cyAtIEJhcmNvZGUgU2Nhbm5lcgBUWUVSAAAABQAAADIwMjMAVENPTQAAAAUAAABTRlgAVENPTgAAAAUAAABTRlgAVEFMQgAAAAUAAABTRlgAVFJDSwAAAAIAAAAwAFRZRVIAAAAFAAAAMjAyMwBUQ09NAAAABQAAAFNGWABUUEUxAAAABQAAAFNGWABUQ09OAAAABQAAAFNGWABUUFVCAAAABQAAAFNGWABUUlRBAAAABQAAAEQCDCMAAFRDT00AAAAGAAAAYmVlcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//uQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7kMQAA8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+            beepElement.volume = 1.0;
         });
         
-        // Cache untuk audio
-        let beepAudio = null;
-
-        function ensureBeepSound() {
-            if (beepAudio) return beepAudio;
-            
-            beepAudio = new Audio();
-            beepAudio.src = 'data:audio/mp3;base64,SUQzAwAAAAACHVRJVDIAAAAZAAAARWZmZWN0cyAtIEJhcmNvZGUgU2Nhbm5lcgBUWUVSAAAABQAAADIwMjMAVENPTQAAAAUAAABTRlgAVENPTgAAAAUAAABTRlgAVEFMQgAAAAUAAABTRlgAVFJDSwAAAAIAAAAwAFRZRVIAAAAFAAAAMjAyMwBUQ09NAAAABQAAAFNGWABUUEUxAAAABQAAAFNGWABUQ09OAAAABQAAAFNGWABUUFVCAAAABQAAAFNGWABUUlRBAAAABQAAAEQCDCMAAFRDT00AAAAGAAAAYmVlcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//uQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7kMQAA8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
-            beepAudio.preload = 'auto';
-            beepAudio.volume = 1.0;
-            
-            return beepAudio;
-        }
-
-        // Fungsi untuk efek suara - optimasi dengan caching
+        // Fungsi untuk efek suara - menggunakan elemen audio yang sudah ada
         function playBeep() {
-            const audio = ensureBeepSound();
-            audio.currentTime = 0;
-            
-            // Gunakan Promise untuk memastikan audio diputar sebelum melanjutkan
-            return new Promise((resolve) => {
-                const playAttempt = audio.play();
+            const audio = document.getElementById('barcode-beep');
+            if (audio) {
+                audio.currentTime = 0;
                 
-                if (playAttempt) {
-                    playAttempt.then(resolve).catch(() => {
-                        console.log("Suara gagal diputar");
-                        resolve(); // Lanjutkan meskipun suara gagal
-                    });
-                } else {
-                    resolve();
-                }
-            });
+                // Gunakan Promise untuk memastikan audio diputar sebelum melanjutkan
+                return new Promise((resolve) => {
+                    const playAttempt = audio.play();
+                    
+                    if (playAttempt) {
+                        playAttempt.then(resolve).catch(() => {
+                            console.log("Suara gagal diputar");
+                            resolve(); // Lanjutkan meskipun suara gagal
+                        });
+                    } else {
+                        resolve();
+                    }
+                });
+            }
+            return Promise.resolve(); // Fallback jika audio element tidak ditemukan
         }
 
         // Fungsi untuk efek getar yang lebih efisien
@@ -91,28 +85,62 @@
                 const modalContent = document.createElement('div');
                 modalContent.style = 'background-color:white;padding:20px;border-radius:8px;width:90%;max-width:500px;';
                 
-                modalContent.innerHTML = `
-                    <div style="margin-bottom:15px"><h3 style="font-size:1.25rem;font-weight:600;">Scan Barcode</h3></div>
-                    <div id="scanner-status" style="margin-bottom:10px;color:#4b5563;font-size:14px;">Mempersiapkan kamera...</div>
-                    <div id="reader" style="width:100%;min-height:300px;border:1px solid #e5e7eb;overflow:hidden;border-radius:4px;position:relative;">
-                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:180px;border:2px solid #ef4444;border-radius:8px;z-index:1;pointer-events:none;"></div>
-                    </div>
-                    <div style="margin-top:15px;display:flex;justify-content:space-between;align-items:center;">
-                        <button id="flip-button" style="padding:8px 16px;background-color:#3b82f6;color:white;border-radius:6px;border:none;cursor:pointer;">Flip Camera</button>
-                        <button id="cancel-button" style="padding:8px 16px;background-color:#f3f4f6;color:#374151;border-radius:6px;border:none;cursor:pointer;">Cancel</button>
-                    </div>
-                `;
+                // Buat header
+                const header = document.createElement('div');
+                header.style = 'margin-bottom:15px';
+                const headerText = document.createElement('h3');
+                headerText.style = 'font-size:1.25rem;font-weight:600;';
+                headerText.textContent = 'Scan Barcode';
+                header.appendChild(headerText);
                 
+                // Buat status indicator
+                const statusDiv = document.createElement('div');
+                statusDiv.id = 'scanner-status';
+                statusDiv.style = 'margin-bottom:10px;color:#4b5563;font-size:14px;';
+                statusDiv.textContent = 'Mempersiapkan kamera...';
+                
+                // Buat scanner container
+                const readerDiv = document.createElement('div');
+                readerDiv.id = 'reader';
+                readerDiv.style = 'width:100%;min-height:300px;border:1px solid #e5e7eb;overflow:hidden;border-radius:4px;position:relative;';
+                
+                // Buat overlay
+                const overlayDiv = document.createElement('div');
+                overlayDiv.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:180px;border:2px solid #ef4444;border-radius:8px;z-index:1;pointer-events:none;';
+                readerDiv.appendChild(overlayDiv);
+                
+                // Buat footer buttons
+                const footerDiv = document.createElement('div');
+                footerDiv.style = 'margin-top:15px;display:flex;justify-content:space-between;align-items:center;';
+                
+                const flipButton = document.createElement('button');
+                flipButton.id = 'flip-button';
+                flipButton.style = 'padding:8px 16px;background-color:#3b82f6;color:white;border-radius:6px;border:none;cursor:pointer;';
+                flipButton.textContent = 'Flip Camera';
+                
+                const cancelButton = document.createElement('button');
+                cancelButton.id = 'cancel-button';
+                cancelButton.style = 'padding:8px 16px;background-color:#f3f4f6;color:#374151;border-radius:6px;border:none;cursor:pointer;';
+                cancelButton.textContent = 'Cancel';
+                
+                footerDiv.appendChild(flipButton);
+                footerDiv.appendChild(cancelButton);
+                
+                // Susun semua elemen
+                modalContent.appendChild(header);
+                modalContent.appendChild(statusDiv);
+                modalContent.appendChild(readerDiv);
+                modalContent.appendChild(footerDiv);
                 modalContainer.appendChild(modalContent);
                 document.body.appendChild(modalContainer);
                 
                 // Setup event listeners
-                document.getElementById('flip-button').addEventListener('click', function() {
+                flipButton.addEventListener('click', function() {
                     const newFacingMode = currentCamera === 'environment' ? 'user' : 'environment';
                     restartCamera(newFacingMode);
                 });
                 
-                document.getElementById('cancel-button').addEventListener('click', function() {
+                cancelButton.addEventListener('click', function() {
                     if (html5QrCode) {
                         html5QrCode.stop().catch(() => {});
                     }
