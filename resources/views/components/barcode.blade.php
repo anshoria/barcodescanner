@@ -1,6 +1,6 @@
 <div>
     <div class="flex items-center space-x-2">
-        <input type="text" wire:model="data.resi"
+        <input id="data-resi" type="text" wire:model="data.resi"
             class="block w-full transition duration-75 rounded-lg shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-inset focus:ring-primary-500 disabled:opacity-70 border-gray-300 dark:bg-gray-700 dark:text-white dark:focus:border-primary-500" />
         <button type="button" onclick="openBarcodeScanner()"
             class="filament-button inline-flex items-center justify-center py-1 gap-1 font-medium rounded-lg border transition-colors focus:outline-none focus:ring-offset-2 focus:ring-2 focus:ring-inset min-h-[2.25rem] px-4 text-sm text-white shadow focus:ring-white border-transparent bg-primary-600 hover:bg-primary-500 focus:bg-primary-700 focus:ring-offset-primary-700">
@@ -25,251 +25,195 @@
             type="audio/mp3">
     </audio>
 
+    <!-- Modal untuk scanner -->
+    <div id="qrcode-scanner-modal" 
+         x-data="{}" 
+         x-on:open-modal.window="if ($event.detail.id === 'qrcode-scanner-modal') $el.style.display = 'flex'"
+         x-on:close-modal.window="if ($event.detail.id === 'qrcode-scanner-modal') $el.style.display = 'none'"
+         style="display: none;" 
+         class="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-4 max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium">Scan Barcode</h3>
+                <button onclick="closeScannerModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="scan-area relative border-4 border-red-500 rounded-lg overflow-hidden">
+                <video id="scanner" style="width: 100%; display: none;"></video>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Fungsi untuk efek getar
-        function vibrateDevice() {
-            if (navigator.vibrate) {
-                navigator.vibrate(200);
+        // Load ZXing library
+        let ZXing;
+        const loadZXingLibrary = async () => {
+            if (!ZXing) {
+                await import('https://unpkg.com/@zxing/library@0.21.3');
+                ZXing = window.ZXing;
             }
-        }
+            return ZXing;
+        };
 
-        // Fungsi untuk efek suara
-        function playBeep() {
-            const audio = document.getElementById('barcode-beep');
-            if (audio) {
-                // Reset audio ke awal
-                audio.currentTime = 0;
+        const successSound = new Audio('{{ asset("sound/barcode.mp3") }}');
 
-                // Pastikan volume maksimum
-                audio.volume = 1.0;
-
-                // Mencoba memainkan dan menangani error
-                const playPromise = audio.play();
-
-                if (playPromise !== undefined) {
-                    playPromise.then(_ => {
-                        // Berhasil diputar
-                        console.log("Audio berhasil diputar");
-                    }).catch(error => {
-                        console.error("Audio gagal diputar:", error);
-                    });
-                }
-            } else {
-                console.error("Element audio tidak ditemukan");
+        let codeReader = null;
+        const initCodeReader = async () => {
+            if (!codeReader) {
+                await loadZXingLibrary();
+                const hints = new Map();
+                const formats = [
+                    ZXing.BarcodeFormat.QR_CODE,
+                    ZXing.BarcodeFormat.DATA_MATRIX,
+                    ZXing.BarcodeFormat.EAN_13,
+                    ZXing.BarcodeFormat.EAN_8,
+                    ZXing.BarcodeFormat.UPC_A,
+                    ZXing.BarcodeFormat.UPC_E,
+                    ZXing.BarcodeFormat.CODE_39,
+                    ZXing.BarcodeFormat.CODE_128,
+                    ZXing.BarcodeFormat.ITF,
+                    ZXing.BarcodeFormat.CODABAR
+                ];
+                hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+                
+                // Buat reader dengan hints
+                codeReader = new ZXing.BrowserMultiFormatReader(hints);
             }
-        }
+            return codeReader;
+        };
 
-        // Fungsi untuk membuka barcode scanner
+        let isScanning = false;
+        let barcodeInputId = null;
+
         function openBarcodeScanner() {
-            // Load library jika belum
-            if (typeof Html5Qrcode === 'undefined') {
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-                script.onload = initScannerModal;
-                document.head.appendChild(script);
-            } else {
-                initScannerModal();
-            }
+            barcodeInputId = 'data-resi';
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: { id: 'qrcode-scanner-modal' } }));
+        }
 
-            function initScannerModal() {
-                // Create modal container
-                const modalContainer = document.createElement('div');
-                modalContainer.id = 'barcode-scanner-modal';
-                modalContainer.style.position = 'fixed';
-                modalContainer.style.top = '0';
-                modalContainer.style.left = '0';
-                modalContainer.style.width = '100%';
-                modalContainer.style.height = '100%';
-                modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                modalContainer.style.display = 'flex';
-                modalContainer.style.alignItems = 'center';
-                modalContainer.style.justifyContent = 'center';
-                modalContainer.style.zIndex = '9999';
+        function openScannerModal(inputId) {
+            barcodeInputId = inputId;
+            // Open the Filament modal
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: { id: 'qrcode-scanner-modal' } }));
+        }
 
-                // Create modal content
-                const modalContent = document.createElement('div');
-                modalContent.style.backgroundColor = 'white';
-                modalContent.style.padding = '20px';
-                modalContent.style.borderRadius = '8px';
-                modalContent.style.width = '90%';
-                modalContent.style.maxWidth = '500px';
+        function closeScannerModal() {
+            // Close the Filament modal
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: { id: 'qrcode-scanner-modal' } }));
+            stopScanning(); // Make sure to stop the camera when the modal closes
+            barcodeInputId = null;
+        }
 
-                // Create header
-                const header = document.createElement('div');
-                header.style.marginBottom = '15px';
-                header.innerHTML = '<h3 style="font-size: 1.25rem; font-weight: 600;">Scan Barcode</h3>';
+        async function startScanner(selectedDeviceId) {
+            const reader = await initCodeReader();
+            isScanning = true;
+            reader.decodeFromVideoDevice(selectedDeviceId, 'scanner', (result, err) => {
+                const scanArea = document.querySelector('.scan-area');
+                if (result) {
+                    successSound.play().catch(e => console.warn('Could not play success sound:', e));
 
-                // Create status indicator
-                const statusIndicator = document.createElement('div');
-                statusIndicator.id = 'scanner-status';
-                statusIndicator.style.marginBottom = '10px';
-                statusIndicator.style.color = '#4b5563';
-                statusIndicator.style.fontSize = '14px';
-                statusIndicator.innerText = 'Mempersiapkan kamera...';
-
-                // Create scanner container
-                const scannerContainer = document.createElement('div');
-                scannerContainer.id = 'reader';
-                scannerContainer.style.width = '100%';
-                scannerContainer.style.minHeight = '300px';
-                scannerContainer.style.border = '1px solid #e5e7eb';
-                scannerContainer.style.overflow = 'hidden';
-                scannerContainer.style.borderRadius = '4px';
-
-                // Create guidance overlay
-                const guidanceOverlay = document.createElement('div');
-                guidanceOverlay.style.position = 'relative';
-                guidanceOverlay.style.top = '-300px';
-                guidanceOverlay.style.left = '50%';
-                guidanceOverlay.style.transform = 'translateX(-50%)';
-                guidanceOverlay.style.width = '280px';
-                guidanceOverlay.style.height = '180px';
-                guidanceOverlay.style.border = '2px solid #ef4444';
-                guidanceOverlay.style.borderRadius = '8px';
-                guidanceOverlay.style.boxShadow = '0 0 0 2000px rgba(0, 0, 0, 0.3)';
-                guidanceOverlay.style.zIndex = '1';
-                guidanceOverlay.style.pointerEvents = 'none';
-
-                // Create footer
-                const footer = document.createElement('div');
-                footer.style.marginTop = '15px';
-                footer.style.display = 'flex';
-                footer.style.justifyContent = 'space-between';
-                footer.style.alignItems = 'center';
-
-                // Create camera flip button
-                const flipButton = document.createElement('button');
-                flipButton.innerText = 'Flip Camera';
-                flipButton.style.padding = '8px 16px';
-                flipButton.style.backgroundColor = '#3b82f6';
-                flipButton.style.color = 'white';
-                flipButton.style.borderRadius = '6px';
-                flipButton.style.border = 'none';
-                flipButton.style.cursor = 'pointer';
-                flipButton.onclick = function() {
-                    const currentFacingMode = currentCamera === 'environment' ? 'user' : 'environment';
-                    restartCamera(currentFacingMode);
-                };
-
-                // Create cancel button
-                const cancelButton = document.createElement('button');
-                cancelButton.innerText = 'Cancel';
-                cancelButton.style.padding = '8px 16px';
-                cancelButton.style.backgroundColor = '#f3f4f6';
-                cancelButton.style.color = '#374151';
-                cancelButton.style.borderRadius = '6px';
-                cancelButton.style.border = 'none';
-                cancelButton.style.cursor = 'pointer';
-                cancelButton.onclick = function() {
-                    if (html5QrCode) {
-                        try {
-                            html5QrCode.stop();
-                        } catch (err) {
-                            console.log("Error stopping scanner:", err);
+                    const barcodeInput = document.getElementById(barcodeInputId);
+                    if (barcodeInput) {
+                        // Set the value using Alpine to trigger Livewire's reactivity
+                        if (barcodeInput._x_model) {
+                            barcodeInput._x_model.set(result.text);
+                        } else {
+                            // Fallback if Alpine.js binding isn't available
+                            barcodeInput.value = result.text;
+                            barcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
                         }
                     }
-                    modalContainer.remove();
-                };
-
-                // Append elements
-                footer.appendChild(flipButton);
-                footer.appendChild(cancelButton);
-                modalContent.appendChild(header);
-                modalContent.appendChild(statusIndicator);
-                modalContent.appendChild(scannerContainer);
-                scannerContainer.appendChild(guidanceOverlay);
-                modalContent.appendChild(footer);
-                modalContainer.appendChild(modalContent);
-                document.body.appendChild(modalContainer);
-
-                // Start scanner
-                let html5QrCode;
-                let currentCamera = 'environment';
-
-                startScanner(currentCamera);
-
-                function startScanner(facingMode) {
-                    currentCamera = facingMode;
-                    const statusElement = document.getElementById('scanner-status');
-
-                    try {
-                        html5QrCode = new Html5Qrcode("reader");
-
-                        const config = {
-                            fps: 20,
-                            qrbox: {
-                                width: 280,
-                                height: 180
-                            },
-                            formatsToSupport: [
-                                Html5QrcodeSupportedFormats.CODE_128,
-                                Html5QrcodeSupportedFormats.EAN_13,
-                                Html5QrcodeSupportedFormats.EAN_8,
-                                Html5QrcodeSupportedFormats.CODE_39,
-                                Html5QrcodeSupportedFormats.CODE_93,
-                                Html5QrcodeSupportedFormats.UPC_A,
-                                Html5QrcodeSupportedFormats.UPC_E
-                            ],
-                            experimentalFeatures: {
-                                useBarCodeDetectorIfSupported: true
-                            },
-                            aspectRatio: 1.0
-                        };
-
-                        html5QrCode.start({
-                                facingMode: facingMode
-                            },
-                            config,
-                            (decodedText) => {
-                                // Efek suara dan getar saat berhasil
-                                playBeep();
-                                vibrateDevice();
-
-                                statusElement.innerText = 'Barcode terdeteksi!';
-                                statusElement.style.color = '#10b981';
-                                statusElement.style.fontWeight = 'bold';
-
-                                // Set nilai ke input resi
-                                try {
-                                    const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
-                                    window.Livewire.find(wireId).set('data.resi', decodedText);
-
-                                    // Tutup modal setelah delay singkat
-                                    setTimeout(() => {
-                                        if (html5QrCode) {
-                                            html5QrCode.stop().catch(() => {});
-                                        }
-                                        modalContainer.remove();
-                                    }, 1000);
-                                } catch (error) {
-                                    console.error('Error setting form value:', error);
-                                }
-                            },
-                            (errorMessage) => {
-                                // Silent error handling
-                            }
-                        ).then(() => {
-                            statusElement.innerText = 'Arahkan kamera ke barcode';
-                        }).catch((err) => {
-                            statusElement.innerText = 'Error: ' + err.message;
-                            console.error('Error starting scanner:', err);
-                        });
-                    } catch (error) {
-                        console.error('Error initializing scanner:', error);
-                    }
+                    scanArea.style.borderColor = 'green';
+                    stopScanning(); // Optionally stop scanning after successful read
+                    closeScannerModal(); // Close the modal after successful scan
+                } else if (err && !(err instanceof ZXing.NotFoundException)) {
+                    console.error(err);
+                } else {
+                    scanArea.style.borderColor = 'red';
                 }
+            });
+        }
 
-                function restartCamera(facingMode) {
-                    if (html5QrCode) {
-                        html5QrCode.stop().then(() => {
-                            startScanner(facingMode);
-                        }).catch((err) => {
-                            console.error('Error stopping scanner:', err);
-                            startScanner(facingMode);
-                        });
-                    }
+        function stopScanning() {
+            if (!isScanning) return;
+            
+            isScanning = false;
+            const video = document.getElementById('scanner');
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            if (video) {
+                video.style.display = 'none';
+            }
+            
+            if (codeReader) {
+                try {
+                    codeReader.reset();
+                } catch (error) {
+                    console.warn('Error resetting code reader:', error);
                 }
             }
         }
+
+        function startCamera() {
+            initCodeReader().then((reader) => {
+                reader.getVideoInputDevices().then((videoInputDevices) => {
+                    if (videoInputDevices.length === 0) {
+                        alert("No camera devices found.");
+                        return;
+                    }
+                    
+                    const rearCamera = videoInputDevices.find(device => 
+                        device.label.toLowerCase().includes('back') || 
+                        device.label.toLowerCase().includes('rear')
+                    );
+                    const selectedDeviceId = rearCamera ? rearCamera.deviceId : videoInputDevices[0].deviceId;
+
+                    navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: selectedDeviceId } } })
+                        .then(function (stream) {
+                            const video = document.getElementById('scanner');
+                            video.srcObject = stream;
+                            video.style.display = 'block'; // Ensure the video element is visible
+                            startScanner(selectedDeviceId);
+                        })
+                        .catch(function (err) {
+                            console.error("Error accessing the camera: ", err);
+                            alert("Camera access is required to scan barcodes.");
+                        });
+                }).catch((err) => {
+                    console.error("Error getting video devices:", err);
+                    alert("Could not access camera devices.");
+                });
+            }).catch(err => {
+                console.error("Error initializing code reader:", err);
+                alert("Could not initialize barcode scanner.");
+            });
+        }
+
+        // Listen for modal opening and start camera
+        window.addEventListener('open-modal', event => {
+            if (event.detail.id === 'qrcode-scanner-modal') {
+                startCamera();
+            }
+        });
+
+        // Listen for modal closing and stop camera
+        window.addEventListener('close-modal', event => {
+            if (event.detail.id === 'qrcode-scanner-modal') {
+                stopScanning();
+            }
+        });
+
+        // Preload the ZXing library when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Preload the library but don't initialize the reader yet
+            loadZXingLibrary().catch(err => {
+                console.warn('Failed to preload ZXing library:', err);
+            });
+
+            successSound.load();
+        });
     </script>
 </div>
