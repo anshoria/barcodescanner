@@ -12,7 +12,23 @@ let codeReader = null;
 const initCodeReader = async () => {
     if (!codeReader) {
         await loadZXingLibrary();
-        codeReader = new ZXing.BrowserMultiFormatReader();
+        const hints = new Map();
+        const formats = [
+            ZXing.BarcodeFormat.QR_CODE,
+            ZXing.BarcodeFormat.DATA_MATRIX,
+            ZXing.BarcodeFormat.EAN_13,
+            ZXing.BarcodeFormat.EAN_8,
+            ZXing.BarcodeFormat.UPC_A,
+            ZXing.BarcodeFormat.UPC_E,
+            ZXing.BarcodeFormat.CODE_39,
+            ZXing.BarcodeFormat.CODE_128,
+            ZXing.BarcodeFormat.ITF,
+            ZXing.BarcodeFormat.CODABAR
+        ];
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+        
+        // Buat reader dengan hints
+        codeReader = new ZXing.BrowserMultiFormatReader(hints);
     }
     return codeReader;
 };
