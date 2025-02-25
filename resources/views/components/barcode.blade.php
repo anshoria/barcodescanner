@@ -24,8 +24,6 @@
             src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAA..."
             type="audio/mp3">
     </audio>
-
-    <!-- Modal untuk scanner (diluar form)-->
 </div>
 
 <!-- Modal untuk scanner (memastikan berada di luar form) -->
