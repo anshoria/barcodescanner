@@ -8,7 +8,7 @@ const loadZXingLibrary = async () => {
     return ZXing;
 };
 
-const successSound = new Audio('/sound/barcode.mp3');
+const successSound = new Audio('sound/barcode.mp3');
 
 let codeReader = null;
 const initCodeReader = async () => {
