@@ -8,29 +8,11 @@ const loadZXingLibrary = async () => {
     return ZXing;
 };
 
-const successSound = new Audio('sound/barcode.mp3');
-
 let codeReader = null;
 const initCodeReader = async () => {
     if (!codeReader) {
         await loadZXingLibrary();
-        const hints = new Map();
-        const formats = [
-            ZXing.BarcodeFormat.QR_CODE,
-            ZXing.BarcodeFormat.DATA_MATRIX,
-            ZXing.BarcodeFormat.EAN_13,
-            ZXing.BarcodeFormat.EAN_8,
-            ZXing.BarcodeFormat.UPC_A,
-            ZXing.BarcodeFormat.UPC_E,
-            ZXing.BarcodeFormat.CODE_39,
-            ZXing.BarcodeFormat.CODE_128,
-            ZXing.BarcodeFormat.ITF,
-            ZXing.BarcodeFormat.CODABAR
-        ];
-        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-        
-        // Buat reader dengan hints
-        codeReader = new ZXing.BrowserMultiFormatReader(hints);
+        codeReader = new ZXing.BrowserMultiFormatReader();
     }
     return codeReader;
 };
@@ -56,9 +38,6 @@ async function startScanner(selectedDeviceId) {
   reader.decodeFromVideoDevice(selectedDeviceId, 'scanner', (result, err) => {
     const scanArea = document.querySelector('.scan-area');
     if (result) {
-
-      successSound.play().catch(e => console.warn('Could not play success sound:', e));
-
       const barcodeInput = document.getElementById(barcodeInputId);
       if (barcodeInput) {
         // Set the value using Alpine to trigger Livewire's reactivity
@@ -127,6 +106,4 @@ document.addEventListener('DOMContentLoaded', () => {
   loadZXingLibrary().catch(err => {
     console.warn('Failed to preload ZXing library:', err);
   });
-
-  successSound.load();
 });

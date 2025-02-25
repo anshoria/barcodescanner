@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Marvinosswald\FilamentInputSelectAffix\TextInputSelectAffix;
 
 class PaketResource extends Resource
 {
@@ -27,6 +28,8 @@ class PaketResource extends Resource
                 ViewField::make('barcode_scanner')
                 ->view('components.barcode')
                 ->columnSpan('full'),
+
+    
             ]);
     }
 
