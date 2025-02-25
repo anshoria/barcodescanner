@@ -18,9 +18,11 @@
 
     <!-- Audio untuk efek suara -->
     <audio id="barcode-beep" preload="auto">
+        <source src="sound/barcode.mp3'" type="audio/mp3">
+        <!-- Fallback menggunakan data URI jika file tidak ditemukan -->
         <source
-        src="{{ asset('sound/barcode.mp3') }}"    
-        type="audio/mp3">
+            src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAA..."
+            type="audio/mp3">
     </audio>
 
     <script>
@@ -35,8 +37,25 @@
         function playBeep() {
             const audio = document.getElementById('barcode-beep');
             if (audio) {
+                // Reset audio ke awal
                 audio.currentTime = 0;
-                audio.play().catch(e => console.log("Audio play failed:", e));
+
+                // Pastikan volume maksimum
+                audio.volume = 1.0;
+
+                // Mencoba memainkan dan menangani error
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        // Berhasil diputar
+                        console.log("Audio berhasil diputar");
+                    }).catch(error => {
+                        console.error("Audio gagal diputar:", error);
+                    });
+                }
+            } else {
+                console.error("Element audio tidak ditemukan");
             }
         }
 
@@ -177,7 +196,7 @@
                         html5QrCode = new Html5Qrcode("reader");
 
                         const config = {
-                            fps: 20,
+                            fps: 10,
                             qrbox: {
                                 width: 280,
                                 height: 180
